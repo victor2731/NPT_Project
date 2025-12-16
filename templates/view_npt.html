@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4>NPT Records</h4>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col">
+    <input type="date" name="from_date" class="form-control">
+  </div>
+  <div class="col">
+    <input type="date" name="to_date" class="form-control">
+  </div>
+  <div class="col">
+    <select name="department" class="form-control">
+      <option value="">Department</option>
+      {% for d in departments %}
+      <option value="{{ d.department }}">{{ d.department }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col">
+    <select name="equipment" class="form-control">
+      <option value="">Equipment</option>
+      {% for e in equipments %}
+      <option value="{{ e.equipment }}">{{ e.equipment }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col">
+    <button class="btn btn-dark">Filter</button>
+  </div>
+</form>
+
+<table class="table table-bordered table-sm">
+  <tr>
+    <th>Date</th><th>Dept</th><th>Equipment</th>
+    <th>Hours</th><th>Category</th><th>Reason</th>
+  </tr>
+  {% for r in records %}
+  <tr>
+    <td>{{ r.npt_date }}</td>
+    <td>{{ r.department }}</td>
+    <td>{{ r.equipment }}</td>
+    <td>{{ r.npt_hours }}</td>
+    <td>{{ r.npt_category }}</td>
+    <td>{{ r.reason }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

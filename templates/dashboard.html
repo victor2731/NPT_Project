@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4>NPT Analytics</h4>
+
+<h6>Department-wise NPT</h6>
+<table class="table table-bordered">
+{% for d in dept_data %}
+<tr>
+  <td>{{ d.department }}</td>
+  <td>{{ d.total }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h6>Equipment-wise NPT</h6>
+<table class="table table-bordered">
+{% for e in equip_data %}
+<tr>
+  <td>{{ e.equipment }}</td>
+  <td>{{ e.total }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
