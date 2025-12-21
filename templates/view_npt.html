@@ -11,20 +11,28 @@
     <input type="date" name="to_date" class="form-control">
   </div>
   <div class="col">
-    <select name="department" class="form-control">
+        <select name="department" class="form-control" onchange="this.form.submit()">
       <option value="">Department</option>
       {% for d in departments %}
-      <option value="{{ d.department }}">{{ d.department }}</option>
+        <option value="{{ d.Department }}"
+          {% if d.Department == selected_department %}selected{% endif %}>
+          {{ d.Department }}
+        </option>
       {% endfor %}
     </select>
+
   </div>
   <div class="col">
     <select name="equipment" class="form-control">
-      <option value="">Equipment</option>
-      {% for e in equipments %}
-      <option value="{{ e.equipment }}">{{ e.equipment }}</option>
-      {% endfor %}
-    </select>
+  <option value="">Equipment</option>
+  {% for e in equipments %}
+    <option value="{{ e.Equipment }}"
+      {% if e.Equipment == selected_equipment %}selected{% endif %}>
+      {{ e.Equipment }}
+    </option>
+  {% endfor %}
+</select>
+
   </div>
   <div class="col">
     <button class="btn btn-dark">Filter</button>
@@ -38,12 +46,12 @@
   </tr>
   {% for r in records %}
   <tr>
-    <td>{{ r.npt_date }}</td>
-    <td>{{ r.department }}</td>
-    <td>{{ r.equipment }}</td>
-    <td>{{ r.npt_hours }}</td>
-    <td>{{ r.npt_category }}</td>
-    <td>{{ r.reason }}</td>
+    <td>{{ r.Date }}</td>
+    <td>{{ r.Department }}</td>
+    <td>{{ r.Equipment }}</td>
+    <td>{{ r.Time }}</td>
+    <td>{{ r.Category }}</td>
+    <td>{{ r.Reason }}</td>
   </tr>
   {% endfor %}
 </table>

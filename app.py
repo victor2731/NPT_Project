@@ -15,7 +15,7 @@ def get_db():
 # ---------- HOME / VIEW NPT ----------
 @app.route("/")
 def view_npt():
-    query = "SELECT * FROM npt_records WHERE 1=1"
+    base_query = "SELECT Date, Category, Department, Equipment, Time, Reason FROM npt_dataset WHERE 1=1"
     params = []
 
     from_date = request.args.get("from_date")
@@ -24,31 +24,39 @@ def view_npt():
     equipment = request.args.get("equipment")
 
     if from_date:
-        query += " AND npt_date >= ?"
+        base_query += " AND Date >= ?"
         params.append(from_date)
 
     if to_date:
-        query += " AND npt_date <= ?"
+        base_query += " AND Date <= ?"
         params.append(to_date)
 
     if department:
-        query += " AND department = ?"
+        base_query += " AND Department = ?"
         params.append(department)
 
     if equipment:
-        query += " AND equipment = ?"
+        base_query += " AND Equipment = ?"
         params.append(equipment)
 
     conn = get_db()
-    records = conn.execute(query, params).fetchall()
+    records = conn.execute(base_query, params).fetchall()
 
+    # Departments → always all
     departments = conn.execute(
-        "SELECT DISTINCT department FROM npt_records"
+        "SELECT DISTINCT Department FROM npt_dataset"
     ).fetchall()
 
-    equipments = conn.execute(
-        "SELECT DISTINCT equipment FROM npt_records"
-    ).fetchall()
+    # Equipments → depend on department
+    if department:
+        equipments = conn.execute(
+            "SELECT DISTINCT Equipment FROM npt_dataset WHERE Department = ?",
+            (department,)
+        ).fetchall()
+    else:
+        equipments = conn.execute(
+            "SELECT DISTINCT Equipment FROM npt_dataset"
+        ).fetchall()
 
     conn.close()
 
@@ -56,7 +64,9 @@ def view_npt():
         "view_npt.html",
         records=records,
         departments=departments,
-        equipments=equipments
+        equipments=equipments,
+        selected_department=department,
+        selected_equipment=equipment
     )
 
 # ---------- ADD NPT ----------
@@ -67,20 +77,16 @@ def add_npt():
 
         conn = get_db()
         conn.execute("""
-            INSERT INTO npt_records
-            (npt_date, day_no, npt_category, department, equipment,
-             npt_hours, time_period, reason, remarks)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO npt_dataset
+            (Date, Category, Department, Equipment, Time, Reason)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, (
-            data["npt_date"],
-            data["day_no"],
-            data["npt_category"],
-            data["department"],
-            data["equipment"],
-            data["npt_hours"],
-            data["time_period"],
-            data["reason"],
-            data["remarks"]
+            data["Date"],
+            normalize_text(data["Category"]),
+            normalize_text(data["Department"]),
+            normalize_text(data["Equipment"]),
+            data["Time"],
+            data["Reason"]
         ))
 
         conn.commit()
@@ -89,17 +95,42 @@ def add_npt():
 
     return render_template("add_npt.html")
 
+
 # ---------- DOWNLOAD EXCEL ----------
 @app.route("/download")
 def download_excel():
+    query = "SELECT Date, Category, Department, Equipment, Time, Reason FROM npt_dataset WHERE 1=1"
+    params = []
+
+    from_date = request.args.get("from_date")
+    to_date = request.args.get("to_date")
+    department = request.args.get("department")
+    equipment = request.args.get("equipment")
+
+    if from_date:
+        query += " AND Date >= ?"
+        params.append(from_date)
+
+    if to_date:
+        query += " AND Date <= ?"
+        params.append(to_date)
+
+    if department:
+        query += " AND Department = ?"
+        params.append(department)
+
+    if equipment:
+        query += " AND Equipment = ?"
+        params.append(equipment)
+
     conn = get_db()
-    df = pd.read_sql("SELECT * FROM npt_records", conn)
+    df = pd.read_sql_query(query, conn, params=params)
     conn.close()
 
-    file_name = "NPT_Report_Upto_" + datetime.now().strftime("%d_%m_%Y") + ".xlsx"
-    df.to_excel(file_name, index=False)
+    file_path = "filtered_npt.xlsx"
+    df.to_excel(file_path, index=False)
 
-    return send_file(file_name, as_attachment=True)
+    return send_file(file_path, as_attachment=True)
 
 # ---------- DASHBOARD ----------
 @app.route("/dashboard")
@@ -107,19 +138,25 @@ def dashboard():
     conn = get_db()
 
     dept_data = conn.execute("""
-        SELECT department, SUM(npt_hours) total
-        FROM npt_records
-        GROUP BY department
+        SELECT Department, SUM(Time) total
+        FROM npt_dataset
+        GROUP BY Department
     """).fetchall()
 
     equip_data = conn.execute("""
-        SELECT equipment, SUM(npt_hours) total
-        FROM npt_records
-        GROUP BY equipment
+        SELECT Equipment, SUM(Time) total
+        FROM npt_dataset
+        GROUP BY Equipment
     """).fetchall()
 
     conn.close()
     return render_template("dashboard.html", dept_data=dept_data, equip_data=equip_data)
+
+def normalize_text(value):
+    if not value:
+        return None
+    return value.strip().title()
+
 
 # ---------- RUN ----------
 if __name__ == "__main__":

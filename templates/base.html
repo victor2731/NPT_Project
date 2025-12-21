@@ -12,7 +12,14 @@
         <a class="btn btn-success btn-sm" href="/add">Add NPT</a>
         <a class="btn btn-info btn-sm" href="/dashboard">Dashboard</a>
         <a class="btn btn-info btn-sm" href="/">View NPT</a>
-        <a class="btn btn-warning btn-sm" href="/download">Download Excel</a>
+        <a class="btn btn-success mb-2"
+        href="{{ url_for('download_excel',
+                from_date=request.args.get('from_date'),
+                to_date=request.args.get('to_date'),
+                department=request.args.get('department'),
+                equipment=request.args.get('equipment')) }}">
+        Download Excel
+        </a>
     </div>
 </nav>
 
