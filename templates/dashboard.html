@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<h3 class="mb-4">NPT Analytics Dashboard</h3>
+<h3 class="mb-4">NPT Dashboard</h3>
 
 <div class="row mb-4">
   <div class="col-md-3">
@@ -20,7 +20,7 @@
   </div>
 </div>
 
-<div class="card p-4 mb-4" style="height: 800px; overflow-x: auto;">
+<div class="card p-4 mb-4" style="height: 600px; overflow-x: auto;">
   <h6 style="color: antiquewhite;">Overall NPT Trend</h6>
   <div style="min-width: 98%; position: relative;">
     <canvas id="barChart" style="display: block;"></canvas>
@@ -31,7 +31,7 @@
   <div class="col-md-6">
     <div class="card p-4">
       <h6 style="color: antiquewhite;">Equipment-wise NPT</h6>
-      <canvas id="equipBar"></canvas>
+      <canvas id="equipBar" style="cursor: pointer;"></canvas>
     </div>
   </div>
   <div class="col-md-6">
@@ -51,7 +51,7 @@ const barValues = {{ date_data | map(attribute='total') | list | tojson }};
 Chart.register(ChartDataLabels);
 
 const barCtx = document.getElementById('barChart');
-const minWidth = Math.max(barLabels.length * 25, barCtx.parentElement.clientWidth - 40);
+const minWidth = Math.max(barLabels.length * 80, barCtx.parentElement.clientWidth);
 barCtx.style.minWidth = minWidth + 'px';
 
 new Chart(barCtx, {
@@ -80,7 +80,13 @@ new Chart(barCtx, {
         grid: { color: "#1f2937", drawBorder: false }
       },
       x: {
-        ticks: { color: "#9ca3af" },
+        ticks: {
+          color: "#f2f3ed",
+          maxRotation: 70,
+          minRotation: 70,
+          font: { size: 10 },
+          autoSkip: false
+        },
         grid: { color: "#1f2937", drawBorder: false }
       }
     },
@@ -115,6 +121,9 @@ const equipValues = {{ equip_data | map(attribute='total') | list | tojson }};
 const equipColors = {{ equip_colors | tojson }};
 
 new Chart(equipBar, {
+
+
+
   type: "bar",
   data: {
     labels: equipLabels,
@@ -124,14 +133,19 @@ new Chart(equipBar, {
       backgroundColor: equipColors,
       borderColor: equipColors,
       borderWidth: 0,
-      borderRadius: 4
-    }]
+      borderRadius: 4,
+      minBarLength: 2,
+    }]    
   },
   options: {
     indexAxis: "y",
     responsive: true,
     interaction: {
-      mode: 'index',
+      mode: 'nearest',
+      intersect: false
+    },
+    hover: {
+      mode: 'nearest',
       intersect: false
     },
     scales: {
